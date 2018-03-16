@@ -22,6 +22,101 @@ npm i
 node service.js
 ```
 
+Using the API
+=
+
+/getinfo
+==
+
+You may call the URL using any of the following paths.
+
+* /getinfo
+* /1.1.1.1/getinfo
+* /1.1.1.1/11898/getinfo
+
+You will receive a JSON response as shown below.
+
+```javascript
+{
+    "alt_blocks_count": 34,
+    "difficulty": 194403128,
+    "grey_peerlist_size": 4199,
+    "height": 270523,
+    "incoming_connections_count": 30,
+    "last_known_block_index": 270520,
+    "outgoing_connections_count": 8,
+    "status": "OK",
+    "tx_count": 264219,
+    "tx_pool_size": 0,
+    "white_peerlist_size": 333,
+    "cached": false,
+    "node": {
+    "host": "public.turtlenode.io",
+    "port": 11898
+    },
+    "globalHashRate": 6480104
+}
+```
+
+/getheight
+==
+
+You may call the URL using any of the following paths.
+
+* /getheight
+* /1.1.1.1/getheight
+* /1.1.1.1/11898/getheight
+
+You will receive a JSON response as shown below.
+
+```javascript
+{
+    "height": 270524,
+    "status": "OK",
+    "cached": false,
+    "node": {
+        "host": "public.turtlenode.io",
+        "port": 11898
+    }
+}
+```
+
+/gettransactions
+==
+
+You may call the URL using any of the following paths.
+
+* /gettransactions
+* /1.1.1.1/gettransactions
+* /1.1.1.1/11898/gettransactions
+
+You will receive a JSON response as shown below.
+
+```javascript
+{
+    "missed_tx": [],
+    "status": "OK",
+    "txs_as_hex": [],
+    "cached": false,
+    "node": {
+        "host": "public.turtlenode.io",
+        "port": 11898
+    }
+}
+```
+
+/json_rpc
+==
+
+You may call the POST to the URL using any of the following paths.
+
+* /json_rpc
+* /1.1.1.1/json_rpc
+* /1.1.1.1/11898/json_rpc
+
+These will respond back as if you made the same requests directly to the node. For full documentation of what's supported, see the TurtleCoin documentation.
+
+
 Keep it Running
 =
 

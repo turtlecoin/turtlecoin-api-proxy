@@ -16,7 +16,7 @@ Easy Start
 This will spin up a copy of the webservice on 0.0.0.0:80. See the additional options below to customize the port or IP the web service binds to.
 
 ```bash
-git clone 
+git clone https://github.com/brandonlehmann/turtlecoin-api-proxy.git
 cd turtlecoin-api-proxy
 npm i
 node service.js

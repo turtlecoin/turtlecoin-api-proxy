@@ -17,6 +17,7 @@ const backupSeeds = [
   { host: 'sin.turtlenode.io', port: 11898 },
   { host: 'daemon.turtle.link', port: 11898 }
 ]
+const poolList = 'https://raw.githubusercontent.com/turtlecoin/turtlecoin-pools-json/master/turtlecoin-pools.json'
 
 function Self (opts) {
   opts = opts || {}
@@ -25,6 +26,7 @@ function Self (opts) {
   this.bindIp = opts.bindIp || '0.0.0.0'
   this.bindPort = opts.bindPort || 80
   this.seeds = opts.seeds || backupSeeds
+  this.pools = opts.pools || []
   this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
   this.app = express()
   this.app.use(bodyparser.json())
@@ -49,6 +51,10 @@ function Self (opts) {
       this.emit('error', err)
       return response.status(400).send()
     })
+  })
+
+  this.app.get('/pools', (request, response) => {
+    return response.json(this.pools)
   })
 
   this.app.get('/:node/getinfo', (request, response) => {
@@ -194,6 +200,20 @@ function Self (opts) {
       return response.status(400).send()
     })
   })
+
+  var that = this
+  function getPools () {
+    that._getPoolList().then((pools) => {
+      that.pools = pools
+    }).catch((err) => {
+      that.emit('error', err)
+    })
+  }
+
+  if (this.pools.length === 0) {
+    getPools()
+    this.poolUpdater = setInterval(getPools, (60 * 60 * 1000))
+  }
 }
 inherits(Self, EventEmitter)
 
@@ -378,6 +398,27 @@ Self.prototype._postJsonRpc = function (content, node, port) {
       return resolve(data)
     }).catch((err) => {
       return resolve({error: err, node: {host: node, port: port}})
+    })
+  })
+}
+
+Self.prototype._getPoolList = function () {
+  return new Promise((resolve, reject) => {
+    var pools = []
+    Request({
+      method: 'GET',
+      uri: poolList,
+      json: true
+    }).then((data) => {
+      Object.keys(data).forEach((elem) => {
+        pools.push({
+          name: elem,
+          url: util.format('%sstats', data[elem].url)
+        })
+      })
+      return resolve(pools)
+    }).catch((err) => {
+      return reject(err)
     })
   })
 }

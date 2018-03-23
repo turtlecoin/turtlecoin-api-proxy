@@ -57,6 +57,10 @@ function Self (opts) {
     return response.json(this.pools)
   })
 
+  this.app.get('/trustedNodes', (request, response) => {
+    return response.json(this.seeds)
+  })
+
   this.app.get('/:node/getinfo', (request, response) => {
     if (!request.params.node) return response.status(400).send()
     this._getInfo(request.params.node).then((data) => {

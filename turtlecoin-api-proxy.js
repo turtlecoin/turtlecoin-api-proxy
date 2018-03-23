@@ -208,9 +208,10 @@ Self.prototype.stop = function () {
   this.emit('stop')
 }
 
-Self.prototype._set = function (node, port, method, data) {
+Self.prototype._set = function (node, port, method, data, ttl) {
+  ttl = ttl || this.cacheTimeout
   var key = util.format('%s%s%s', node, port, method)
-  this.cache.set(key, data)
+  this.cache.set(key, data, ttl)
 }
 
 Self.prototype._get = function (node, port, method) {

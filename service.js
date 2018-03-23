@@ -10,11 +10,11 @@ function log (message) {
 }
 
 server.on('error', (err) => {
-  log(err)  
+  log(err)
 })
 
 server.on('ready', (ip, port) => {
-  log(util.format('Server is listening on %s:%s ...', ip, port))  
+  log(util.format('Server is listening on %s:%s ...', ip, port))
 })
 
 server.start()

@@ -10,6 +10,13 @@ const Request = require('request-promise')
 const bodyparser = require('body-parser')
 const NodeCache = require('node-cache')
 const targetBlockTime = 30
+const backupSeeds = [
+  { host: 'nyc.turtlenode.io', port: 11898 },
+  { host: 'sfo.turtlenode.io', port: 11898 },
+  { host: 'ams.turtlenode.io', port: 11898 },
+  { host: 'sin.turtlenode.io', port: 11898 },
+  { host: 'daemon.turtle.link', port: 11898 }
+]
 
 function Self (opts) {
   opts = opts || {}
@@ -17,6 +24,7 @@ function Self (opts) {
   this.cacheTimeout = opts.cacheTimeout || 30
   this.bindIp = opts.bindIp || '0.0.0.0'
   this.bindPort = opts.bindPort || 80
+  this.seeds = opts.seeds || backupSeeds
   this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
   this.app = express()
   this.app.use(bodyparser.json())
@@ -32,6 +40,15 @@ function Self (opts) {
 
   this.app.get('/', (request, response) => {
     return response.status(404).send()
+  })
+
+  this.app.get('/globalHeight', (request, response) => {
+    this._getGlobalHeight().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
   })
 
   this.app.get('/:node/getinfo', (request, response) => {
@@ -252,6 +269,39 @@ Self.prototype._getHeight = function (node, port) {
   })
 }
 
+Self.prototype._getGlobalHeight = function () {
+  return new Promise((resolve, reject) => {
+    var cache = this._get('network', 'network', 'globalheight')
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    var promises = []
+    for (var i = 0; i < this.seeds.length; i++) {
+      var node = this.seeds[i]
+      promises.push(this._getHeight(node.host, node.port))
+    }
+    Promise.all(promises).then((results) => {
+      var heights = []
+      for (var j = 0; j < results.length; j++) {
+        if (!results[j].height) continue
+        var height = results[j].height
+        heights.push(height)
+      }
+      var data = {
+        max: maxValue(heights),
+        min: minValue(heights),
+        avg: avgValue(heights),
+        cached: false
+      }
+      this._set('network', 'network', 'globalheight', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err})
+    })
+  })
+}
+
 Self.prototype._getTransactions = function (node, port) {
   node = node || 'public.turtlenode.io'
   port = port || 11898
@@ -328,6 +378,26 @@ Self.prototype._postJsonRpc = function (content, node, port) {
       return resolve({error: err, node: {host: node, port: port}})
     })
   })
+}
+
+function maxValue (arr) {
+  return arr.reduce((a, b) => {
+    return Math.max(a, b)
+  })
+}
+
+function minValue (arr) {
+  return arr.reduce((a, b) => {
+    return Math.min(a, b)
+  })
+}
+
+function avgValue (arr) {
+  var sum = 0
+  for (var i = 0; i < arr.length; i++) {
+    sum += arr[i]
+  }
+  return Math.round(sum / arr.length)
 }
 
 module.exports = Self

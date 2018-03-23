@@ -227,6 +227,13 @@ function Self (opts) {
     getPools()
     this.poolUpdater = setInterval(getPools, (60 * 60 * 1000))
   }
+
+  this.seedsHeightUpdater = setInterval(() => {
+    this._getGlobalHeight()
+  }, ((Math.round(this.cacheTimeout / 3) * 1000)))
+  this.poolHeightUpdater = setInterval(() => {
+    this._getGlobalPoolHeight()
+  }, ((Math.round(this.cacheTimeout / 3) * 1000)))
 }
 inherits(Self, EventEmitter)
 

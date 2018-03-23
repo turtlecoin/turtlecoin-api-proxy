@@ -272,7 +272,8 @@ Self.prototype._getHeight = function (node, port) {
 
 Self.prototype._getGlobalHeight = function () {
   return new Promise((resolve, reject) => {
-    var cache = this._get('network', 'network', 'globalheight')
+    var ttl = Math.round(targetBlockTime / 3)
+    var cache = this._get('network', 'network', 'globalheight', ttl)
     if (cache) {
       cache.cached = true
       return resolve(cache)

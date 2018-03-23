@@ -53,6 +53,15 @@ function Self (opts) {
     })
   })
 
+  this.app.get('/globalPoolHeight', (request, response) => {
+    this._getGlobalPoolHeight().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
   this.app.get('/pools', (request, response) => {
     return response.json(this.pools)
   })
@@ -318,10 +327,68 @@ Self.prototype._getGlobalHeight = function () {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
+        cnt: heights.length,
         cached: false
       }
       this._set('network', 'network', 'globalheight', data)
       return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err})
+    })
+  })
+}
+
+Self.prototype._getGlobalPoolHeight = function () {
+  return new Promise((resolve, reject) => {
+    var ttl = Math.round(targetBlockTime / 3)
+    var cache = this._get('pool', 'pool', 'globalpoolheight', ttl)
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    var promises = []
+    for (var i = 0; i < this.pools.length; i++) {
+      var node = this.pools[i]
+      var url = node.url
+      promises.push(this._getPoolNetworkInfo(url))
+    }
+    Promise.all(promises).then((results) => {
+      var heights = []
+      for (var j = 0; j < results.length; j++) {
+        if (!results[j].height) continue
+        var height = results[j].height
+        heights.push(height)
+      }
+      var data = {
+        max: maxValue(heights),
+        min: minValue(heights),
+        avg: avgValue(heights),
+        cnt: heights.length,
+        cached: false
+      }
+      this._set('pool', 'pool', 'globalpoolheight', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err})
+    })
+  })
+}
+
+Self.prototype._getPoolNetworkInfo = function (url) {
+  return new Promise((resolve, reject) => {
+    var cache = this._get('pool', url, 'networkInfo')
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    Request({
+      method: 'GET',
+      uri: url,
+      json: true
+    }).then((data) => {
+      if (!data.network) return resolve({error: 'Invalid data returned by remote host'})
+      this._set('pool', url, 'networkInfo')
+      return resolve(data.network)
     }).catch((err) => {
       return resolve({error: err})
     })

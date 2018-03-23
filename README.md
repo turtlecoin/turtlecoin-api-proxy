@@ -116,6 +116,84 @@ You may call the POST to the URL using any of the following paths.
 
 These will respond back as if you made the same requests directly to the node. For full documentation of what's supported, see the TurtleCoin documentation.
 
+/pools
+==
+
+You will receive a JSON response of pools like such below. By default this serves the pool list from https://raw.githubusercontent.com/turtlecoin/turtlecoin-pools-json/master/turtlecoin-pools.json
+
+```javascript
+[
+  {
+    "name": "atpool.party",
+    "url": "http://turtle-eu.atpool.party:8117/stats"
+  },
+  {
+    "name": "auspool.turtleco.in",
+    "url": "http://auspool.turtleco.in/api/stats"
+  }
+]
+```
+
+/trustedNodes
+==
+
+You will receive a JSON response of trusted nodes like such below. 
+This is in reference to the new opts.seeds used during initialization as these are the nodes we "trust".
+
+```javascript
+[
+  {
+    "host": "nyc.turtlenode.io",
+    "port": 11898
+  },
+  {
+    "host": "sfo.turtlenode.io",
+    "port": 11898
+  },
+  {
+    "host": "ams.turtlenode.io",
+    "port": 11898
+  },
+  {
+    "host": "sin.turtlenode.io",
+    "port": 11898
+  },
+  {
+    "host": "daemon.turtle.link",
+    "port": 11898
+  }
+]
+```
+
+/globalHeight
+==
+
+You will receive a JSON response of height information as gathered from the trusted Nodes.
+
+```javascript
+{
+  "max": 289766,
+  "min": 289766,
+  "avg": 289766,
+  "cnt": 5,
+  "cached": true
+}
+```
+
+/globalPoolHeight
+==
+
+You will receive a JSON response of height information as gathered from the pools.
+
+```javascript
+{
+  "max": 289766,
+  "min": 289766,
+  "avg": 289766,
+  "cnt": 15,
+  "cached": true
+}
+```
 
 Keep it Running
 =

@@ -391,7 +391,8 @@ Self.prototype._getPoolNetworkInfo = function (url) {
     Request({
       method: 'GET',
       uri: url,
-      json: true
+      json: true,
+      timeout: 1000
     }).then((data) => {
       if (!data.network) return resolve({error: 'Invalid data returned by remote host'})
       this._set('pool', url, 'networkInfo')

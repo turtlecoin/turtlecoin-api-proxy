@@ -53,8 +53,26 @@ function Self (opts) {
     })
   })
 
+  this.app.get('/globalDifficulty', (request, response) => {
+    this._getGlobalDifficulty().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
   this.app.get('/globalPoolHeight', (request, response) => {
     this._getGlobalPoolHeight().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
+  this.app.get('/globalPoolDifficulty', (request, response) => {
+    this._getGlobalPoolDifficulty().then((data) => {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
@@ -228,11 +246,13 @@ function Self (opts) {
     this.poolUpdater = setInterval(getPools, (60 * 60 * 1000))
   }
 
-  this.seedsHeightUpdater = setInterval(() => {
+  this.seedDataUpdater = setInterval(() => {
     this._getGlobalHeight()
+    this._getGlobalDifficulty()
   }, ((Math.round(this.cacheTimeout / 3) * 1000)))
-  this.poolHeightUpdater = setInterval(() => {
+  this.poolDataUpdater = setInterval(() => {
     this._getGlobalPoolHeight()
+    this._getGlobalPoolDifficulty()
   }, ((Math.round(this.cacheTimeout / 3) * 1000)))
 }
 inherits(Self, EventEmitter)
@@ -345,6 +365,41 @@ Self.prototype._getGlobalHeight = function () {
   })
 }
 
+Self.prototype._getGlobalDifficulty = function () {
+  return new Promise((resolve, reject) => {
+    var ttl = Math.round(targetBlockTime / 3)
+    var cache = this._get('network', 'network', 'globaldifficulty', ttl)
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    var promises = []
+    for (var i = 0; i < this.seeds.length; i++) {
+      var node = this.seeds[i]
+      promises.push(this._getInfo(node.host, node.port))
+    }
+    Promise.all(promises).then((results) => {
+      var diffs = []
+      for (var j = 0; j < results.length; j++) {
+        if (!results[j].difficulty) continue
+        var difficulty = results[j].difficulty
+        diffs.push(difficulty)
+      }
+      var data = {
+        max: maxValue(diffs),
+        min: minValue(diffs),
+        avg: avgValue(diffs),
+        cnt: diffs.length,
+        cached: false
+      }
+      this._set('network', 'network', 'globaldifficulty', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err})
+    })
+  })
+}
+
 Self.prototype._getGlobalPoolHeight = function () {
   return new Promise((resolve, reject) => {
     var ttl = Math.round(targetBlockTime / 3)
@@ -374,6 +429,42 @@ Self.prototype._getGlobalPoolHeight = function () {
         cached: false
       }
       this._set('pool', 'pool', 'globalpoolheight', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err})
+    })
+  })
+}
+
+Self.prototype._getGlobalPoolDifficulty = function () {
+  return new Promise((resolve, reject) => {
+    var ttl = Math.round(targetBlockTime / 3)
+    var cache = this._get('pool', 'pool', 'globalpooldifficulty', ttl)
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    var promises = []
+    for (var i = 0; i < this.pools.length; i++) {
+      var node = this.pools[i]
+      var url = node.url
+      promises.push(this._getPoolNetworkInfo(url))
+    }
+    Promise.all(promises).then((results) => {
+      var diffs = []
+      for (var j = 0; j < results.length; j++) {
+        if (!results[j].difficulty) continue
+        var difficulty = results[j].difficulty
+        diffs.push(difficulty)
+      }
+      var data = {
+        max: maxValue(diffs),
+        min: minValue(diffs),
+        avg: avgValue(diffs),
+        cnt: diffs.length,
+        cached: false
+      }
+      this._set('pool', 'pool', 'globalpooldifficulty', data)
       return resolve(data)
     }).catch((err) => {
       return resolve({error: err})

@@ -195,6 +195,36 @@ You will receive a JSON response of height information as gathered from the pool
 }
 ```
 
+/globalDifficulty
+==
+
+You will receive a JSON response of difficulty information as gathered from the trusted Nodes.
+
+```javascript
+{
+  "max": 162972002,
+  "min": 162972002,
+  "avg": 162972002,
+  "cnt": 5,
+  "cached": true
+}
+```
+
+/globalPoolHeight
+==
+
+You will receive a JSON response of difficulty information as gathered from the pools.
+
+```javascript
+{
+  "max": 180308261,
+  "min": 180308261,
+  "avg": 180308261,
+  "cnt": 14,
+  "cached": false
+}
+```
+
 Keep it Running
 =
 

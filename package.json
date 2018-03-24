@@ -4,7 +4,7 @@
   "description": "Provides an easy to use proxy interface for interacting with multiple TurtleCoin Nodes",
   "main": "turtlecoin-api-proxy.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "standard"
   },
   "author": "Brandon Lehmann <brandonlehmann@gmail.com>",
   "license": "GPL",
@@ -16,5 +16,8 @@
     "node-cache": "^4.1.1",
     "request": "^2.85.0",
     "request-promise": "^4.2.2"
+  },
+  "devDependencies": {
+    "standard": "^11.0.1"
   }
 }

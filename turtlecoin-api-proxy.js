@@ -354,7 +354,9 @@ Self.prototype._getGlobalHeight = function () {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
-        cnt: heights.length,
+        cnt: results.length,
+        ans: heights.length,
+        con: (heights.length / results.length),
         cached: false
       }
       this._set('network', 'network', 'globalheight', data)
@@ -389,7 +391,9 @@ Self.prototype._getGlobalDifficulty = function () {
         max: maxValue(diffs),
         min: minValue(diffs),
         avg: avgValue(diffs),
-        cnt: diffs.length,
+        cnt: results.length,
+        ans: diffs.length,
+        con: (diffs.length / results.length),
         cached: false
       }
       this._set('network', 'network', 'globaldifficulty', data)

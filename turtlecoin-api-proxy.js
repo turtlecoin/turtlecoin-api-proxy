@@ -11,10 +11,18 @@ const bodyparser = require('body-parser')
 const NodeCache = require('node-cache')
 const targetBlockTime = 30
 const backupSeeds = [
-  { host: 'nyc.turtlenode.io', port: 11898 },
-  { host: 'sfo.turtlenode.io', port: 11898 },
-  { host: 'ams.turtlenode.io', port: 11898 },
-  { host: 'sin.turtlenode.io', port: 11898 },
+  { host: 'node-1.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-2.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-3.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-1.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-2.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-3.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-1.ams.turtlenode.io', port: 11898 },
+  { host: 'node-2.ams.turtlenode.io', port: 11898 },
+  { host: 'node-3.ams.turtlenode.io', port: 11898 },
+  { host: 'node-1.sin.turtlenode.io', port: 11898 },
+  { host: 'node-2.sin.turtlenode.io', port: 11898 },
+  { host: 'node-3.sin.turtlenode.io', port: 11898 },
   { host: 'daemon.turtle.link', port: 11898 }
 ]
 const poolList = 'https://raw.githubusercontent.com/turtlecoin/turtlecoin-pools-json/master/turtlecoin-pools.json'
@@ -354,7 +362,9 @@ Self.prototype._getGlobalHeight = function () {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
-        cnt: heights.length,
+        cnt: results.length,
+        ans: heights.length,
+        con: (heights.length / results.length),
         cached: false
       }
       this._set('network', 'network', 'globalheight', data)
@@ -389,7 +399,9 @@ Self.prototype._getGlobalDifficulty = function () {
         max: maxValue(diffs),
         min: minValue(diffs),
         avg: avgValue(diffs),
-        cnt: diffs.length,
+        cnt: results.length,
+        ans: diffs.length,
+        con: (diffs.length / results.length),
         cached: false
       }
       this._set('network', 'network', 'globaldifficulty', data)

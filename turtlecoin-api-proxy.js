@@ -355,6 +355,7 @@ Self.prototype._getGlobalHeight = function () {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
+        med: medValue(heights),
         cnt: results.length,
         ans: heights.length,
         con: (heights.length / results.length),
@@ -392,6 +393,7 @@ Self.prototype._getGlobalDifficulty = function () {
         max: maxValue(diffs),
         min: minValue(diffs),
         avg: avgValue(diffs),
+        med: medValue(diffs),
         cnt: results.length,
         ans: diffs.length,
         con: (diffs.length / results.length),
@@ -430,6 +432,7 @@ Self.prototype._getGlobalPoolHeight = function () {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
+        med: medValue(heights),
         cnt: heights.length,
         cached: false
       }
@@ -466,6 +469,7 @@ Self.prototype._getGlobalPoolDifficulty = function () {
         max: maxValue(diffs),
         min: minValue(diffs),
         avg: avgValue(diffs),
+        med: medValue(diffs),
         cnt: diffs.length,
         cached: false
       }
@@ -616,6 +620,11 @@ function avgValue (arr) {
     sum += arr[i]
   }
   return Math.round(sum / arr.length)
+}
+
+function medValue (arr) {
+  arr.sort((a, b) => a - b)
+  return (arr[(arr.length - 1) >> 1] + arr[arr.length >> 1]) / 2
 }
 
 module.exports = Self

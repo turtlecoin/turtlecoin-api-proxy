@@ -23,6 +23,7 @@ function Self (opts) {
   opts = opts || {}
   if (!(this instanceof Self)) return new Self(opts)
   this.cacheTimeout = opts.cacheTimeout || 30
+  this.timeout = opts.timeout || 2000
   this.bindIp = opts.bindIp || '0.0.0.0'
   this.bindPort = opts.bindPort || 80
   this.seeds = opts.seeds || backupSeeds
@@ -291,7 +292,10 @@ Self.prototype._getInfo = function (node, port) {
       cache.cached = true
       return resolve(cache)
     }
-    Request(util.format('http://%s:%s/getinfo', node, port)).then((data) => {
+    Request({
+      uri: util.format('http://%s:%s/getinfo', node, port),
+      timeout: this.timeout
+    }).then((data) => {
       data = JSON.parse(data)
       data.cached = false
       data.node = {
@@ -316,7 +320,10 @@ Self.prototype._getHeight = function (node, port) {
       cache.cached = true
       return resolve(cache)
     }
-    Request(util.format('http://%s:%s/getheight', node, port)).then((data) => {
+    Request({
+      uri: util.format('http://%s:%s/getheight', node, port),
+      timeout: this.timeout
+    }).then((data) => {
       data = JSON.parse(data)
       data.cached = false
       data.node = {
@@ -492,7 +499,7 @@ Self.prototype._getPoolNetworkInfo = function (url) {
       method: 'GET',
       uri: url,
       json: true,
-      timeout: 1000
+      timeout: this.timeout
     }).then((data) => {
       if (!data.network) return resolve({error: 'Invalid data returned by remote host'})
       this._set('pool', url, 'networkInfo')
@@ -512,7 +519,10 @@ Self.prototype._getTransactions = function (node, port) {
       cache.cached = true
       return resolve(cache)
     }
-    Request(util.format('http://%s:%s/gettransactions', node, port)).then((data) => {
+    Request({
+      uri: util.format('http://%s:%s/gettransactions', node, port),
+      timeout: this.timeout
+    }).then((data) => {
       data = JSON.parse(data)
       data.cached = false
       data.node = {
@@ -536,7 +546,10 @@ Self.prototype._getJsonRpc = function (node, port) {
       cache.cached = true
       return resolve(cache)
     }
-    Request(util.format('http://%s:%s/json_rpc', node, port)).then((data) => {
+    Request({
+      uri: util.format('http://%s:%s/json_rpc', node, port),
+      timeout: this.timeout
+    }).then((data) => {
       data = JSON.parse(data)
       data.cached = false
       data.node = {

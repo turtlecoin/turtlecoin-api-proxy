@@ -640,4 +640,22 @@ function medValue (arr) {
   return (arr[(arr.length - 1) >> 1] + arr[arr.length >> 1]) / 2
 }
 
+function voteValue (arr) {
+  if (arr.length === 0) return {value: 0, confidence: 1}
+  var tallies = {}
+  for (var i = 0; i < arr.length; i++) {
+    var val = arr[i]
+    if (!tallies[val]) tallies[val] = {value: val, tally: 0}
+    tallies[val].tally++
+  }
+  var votes = []
+  for (var elem in tallies) {
+    votes.push(tallies[elem])
+  }
+  votes = votes.sort((a, b) => b.tally - a.tally)
+  var winner = votes[0]
+  winner.confidence = winner.tally / arr.length
+  return {value: winner.value, confidence: winner.confidence}
+}
+
 module.exports = Self

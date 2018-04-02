@@ -172,13 +172,14 @@ You will receive a JSON response of height information as gathered from the trus
 
 ```javascript
 {
-  "max": 319827,
-  "min": 319827,
-  "avg": 319827,
-  "med": 319827,
+  "max": 319932,
+  "min": 319835,
+  "avg": 319908,
+  "med": 319932,
   "cnt": 5,
   "ans": 4,
-  "con": 0.8,
+  "con": 0.75,
+  "win": 319932,
   "cached": true
 }
 ```
@@ -190,12 +191,14 @@ You will receive a JSON response of height information as gathered from the pool
 
 ```javascript
 {
-  "max": 319830,
+  "max": 319934,
   "min": 311319,
-  "avg": 318622,
-  "med": 319830,
-  "cnt": 15,
-  "cached": false
+  "avg": 318795,
+  "med": 319934,
+  "cnt": 13,
+  "con": 0.6923076923076923,
+  "win": 319934,
+  "cached": true
 }
 ```
 
@@ -206,13 +209,14 @@ You will receive a JSON response of difficulty information as gathered from the 
 
 ```javascript
 {
-  "max": 194075053,
-  "min": 194075053,
-  "avg": 194075053,
-  "med": 194075053,
+  "max": 303926695,
+  "min": 54848952,
+  "avg": 241657259,
+  "med": 303926695,
   "cnt": 5,
   "ans": 4,
-  "con": 0.8,
+  "con": 0.75,
+  "win": 303926695,
   "cached": false
 }
 ```
@@ -224,12 +228,14 @@ You will receive a JSON response of difficulty information as gathered from the 
 
 ```javascript
 {
-  "max": 188031023,
+  "max": 303926695,
   "min": 14439,
-  "avg": 109113890,
-  "med": 131695445,
-  "cnt": 13,
-  "cached": true
+  "avg": 242315265,
+  "med": 303926695,
+  "cnt": 14,
+  "con": 0.7142857142857143,
+  "win": 303926695,
+  "cached": false
 }
 ```
 

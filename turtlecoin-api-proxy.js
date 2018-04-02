@@ -358,6 +358,7 @@ Self.prototype._getGlobalHeight = function () {
         var height = results[j].height
         heights.push(height)
       }
+      var voter = voteValue(heights)
       var data = {
         max: maxValue(heights),
         min: minValue(heights),
@@ -365,7 +366,8 @@ Self.prototype._getGlobalHeight = function () {
         med: medValue(heights),
         cnt: results.length,
         ans: heights.length,
-        con: (heights.length / results.length),
+        con: voter.confidence,
+        win: voter.value,
         cached: false
       }
       this._set('network', 'network', 'globalheight', data)
@@ -396,6 +398,7 @@ Self.prototype._getGlobalDifficulty = function () {
         var difficulty = results[j].difficulty
         diffs.push(difficulty)
       }
+      var voter = voteValue(diffs)
       var data = {
         max: maxValue(diffs),
         min: minValue(diffs),
@@ -403,7 +406,8 @@ Self.prototype._getGlobalDifficulty = function () {
         med: medValue(diffs),
         cnt: results.length,
         ans: diffs.length,
-        con: (diffs.length / results.length),
+        con: voter.confidence,
+        win: voter.value,
         cached: false
       }
       this._set('network', 'network', 'globaldifficulty', data)
@@ -435,12 +439,15 @@ Self.prototype._getGlobalPoolHeight = function () {
         var height = results[j].height
         heights.push(height)
       }
+      var voter = voteValue(heights)
       var data = {
         max: maxValue(heights),
         min: minValue(heights),
         avg: avgValue(heights),
         med: medValue(heights),
         cnt: heights.length,
+        con: voter.confidence,
+        win: voter.value,
         cached: false
       }
       this._set('pool', 'pool', 'globalpoolheight', data)
@@ -472,12 +479,15 @@ Self.prototype._getGlobalPoolDifficulty = function () {
         var difficulty = results[j].difficulty
         diffs.push(difficulty)
       }
+      var voter = voteValue(diffs)
       var data = {
         max: maxValue(diffs),
         min: minValue(diffs),
         avg: avgValue(diffs),
         med: medValue(diffs),
         cnt: diffs.length,
+        con: voter.confidence,
+        win: voter.value,
         cached: false
       }
       this._set('pool', 'pool', 'globalpooldifficulty', data)
@@ -652,7 +662,7 @@ function voteValue (arr) {
   for (var elem in tallies) {
     votes.push(tallies[elem])
   }
-  votes = votes.sort((a, b) => b.tally - a.tally)
+  votes = votes.sort((a, b) => b.value - a.value)
   var winner = votes[0]
   winner.confidence = winner.tally / arr.length
   return {value: winner.value, confidence: winner.confidence}

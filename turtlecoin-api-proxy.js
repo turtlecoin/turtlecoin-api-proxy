@@ -247,11 +247,15 @@ function Self (opts) {
     this.poolUpdater = setInterval(getPools, (60 * 60 * 1000))
   }
 
+  this._getGlobalHeight()
+  this._getGlobalDifficulty()
   this.seedDataUpdater = setInterval(() => {
     this._getGlobalHeight()
     this._getGlobalDifficulty()
   }, ((Math.round(this.cacheTimeout / 3) * 1000)))
 
+  this._getGlobalPoolHeight()
+  this._getGlobalPoolDifficulty()
   this.poolDataUpdater = setInterval(() => {
     this._getGlobalPoolHeight()
     this._getGlobalPoolDifficulty()

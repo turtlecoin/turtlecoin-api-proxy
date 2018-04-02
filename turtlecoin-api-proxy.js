@@ -261,14 +261,14 @@ function Self (opts) {
   this.seedDataUpdater = setInterval(() => {
     this._getGlobalHeight()
     this._getGlobalDifficulty()
-  }, ((Math.round(this.cacheTimeout / 3) * 1000)))
+  }, ((Math.round(this.cacheTimeout / 2) * 1000)))
 
   this._getGlobalPoolHeight()
   this._getGlobalPoolDifficulty()
   this.poolDataUpdater = setInterval(() => {
     this._getGlobalPoolHeight()
     this._getGlobalPoolDifficulty()
-  }, ((Math.round(this.cacheTimeout / 3) * 1000)))
+  }, ((Math.round(this.cacheTimeout / 2) * 1000)))
 }
 inherits(Self, EventEmitter)
 

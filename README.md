@@ -210,7 +210,7 @@ You will receive a JSON response of difficulty information as gathered from the 
 }
 ```
 
-/globalPoolHeight
+/globalPoolDifficulty
 ==
 
 You will receive a JSON response of difficulty information as gathered from the pools.

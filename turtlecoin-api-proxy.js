@@ -32,7 +32,7 @@ function Self (opts) {
   opts = opts || {}
   if (!(this instanceof Self)) return new Self(opts)
   this.cacheTimeout = opts.cacheTimeout || 30
-  this.timeout = opts.timeout || 2000
+  this.timeout = opts.timeout || 5000
   this.bindIp = opts.bindIp || '0.0.0.0'
   this.bindPort = opts.bindPort || 80
   this.seeds = opts.seeds || backupSeeds

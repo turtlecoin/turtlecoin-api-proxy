@@ -595,20 +595,178 @@ Self.prototype.getTransaction = function (opts) {
         return resolve(data)
       }).catch(() => { return reject(new Error('Failure encountered')) })
     })
+  }
+
+  if (!content.method) return reject('No method defined')
+
+  try {
+    switch (content.method) {
+      case 'f_blocks_list_json':
+        return this.getBlocks({
+          host: node,
+          port: port,
+          height: content.params.height
+        })
+      case 'f_block_json':
+        return this.getBlock({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'f_transaction_json':
+        return this.getTransaction({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'getblockcount':
+        return this.getBlockCount({
+          host: node,
+          port: port
+        })
+      case 'on_getblockhash':
+        return this.getBlockHash({
+          host: node,
+          port: port,
+          height: content.params[0]
+        })
+      case 'getlastblockheader':
+        return this.getLastBlockHeader({
+          host: node,
+          port: port
+        })
+      case 'getblockheaderbyhash':
+        return this.getBlockHeaderByHash({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'getblockheaderbyheight':
+        return this.getBlockHeaderByHeight({
+          host: node,
+          port: port,
+          height: content.params.height
+        })
+      case 'f_on_transactions_pool_json':
+        return this.getTransactionPool({
+          host: node,
+          port: port
+        })
+      case 'getblocktemplate':
+        return this.getBlockTemplate({
+          host: node,
+          port: port,
+          reserveSize: content.params.reserve_size,
+          walletAddress: content.params.wallet_address
+        })
+      case 'submitblock':
+        return this.submitBlock({
+          host: node,
+          port: port,
+          blockBlob: content.params[0]
+        })
+      case 'getcurrencyid':
+        return this.getCurrencyId({
+          host: node,
+          port: port
+        })
+      default:
+        return this._jsonRpc({
+          host: node,
+          port: port,
+          method: content.method,
+          params: content.params
+        })
+    }
+  } catch (e) {
+    return reject(e)
+  }
+}
+
+/*
+  Block Explorer Functions That Check the Local Database CACHE
+  before going back to the node to check for the relevant responses
+*/
+
+Self.prototype.getBlocks = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlocks({
+      height: opts.height
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlocks({
+        height: opts.height
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
   })
 }
 
+Self.prototype.getBlock = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlock({
+      hash: opts.hash
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlock({
+        hash: opts.hash
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getTransaction = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getTransaction({
+      hash: opts.hash
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getTransaction({
+        hash: opts.hash
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+=======
+>>>>>>> origin/turtlenode.io
 Self.prototype.getTransactionPool = function (opts) {
   const rpc = new TurtleCoind({
     host: opts.host,
     port: opts.port
   })
   return new Promise((resolve, reject) => {
+    var cache = this._get(rpc.host, rpc.port, 'f_on_transactions_pool_json')
+    if (cache) {
+      return resolve(cache)
+    }
     rpc.getTransactionPool().then((pool) => {
-      return resolve({
+      var data = {
         status: 'OK',
         transactions: pool
-      })
+      }
+      this._set(rpc.host, rpc.port, 'f_on_transactions_pool_json', data)
+      return resolve(data)
     }).catch((err) => {
       return reject(err)
     })
@@ -623,8 +781,8 @@ Self.prototype.getBlockCount = function (opts) {
     })
 
     var networkHeight
-    rpc.getBlockCount().then((height) => {
-      networkHeight = height
+    this.getHeight().then((data) => {
+      networkHeight = data.network_height
       return this.blockCache.getBlockCount()
     }).then((block) => {
       if (Math.abs(networkHeight - block.count) > this.maxDeviance) {
@@ -725,10 +883,16 @@ Self.prototype.getCurrencyId = function (opts) {
     port: opts.port
   })
   return new Promise((resolve, reject) => {
+    var cache = this._get(rpc.host, rpc.port, 'getcurrencyid')
+    if (cache) {
+      return resolve(cache)
+    }
     rpc.getCurrencyId().then((currency) => {
-      return resolve({
+      var data = {
         currency_id_blob: currency
-      })
+      }
+      this._set(rpc.host, rpc.port, 'getcurrencyid', data)
+      return resolve(data)
     }).catch((err) => {
       return reject(err)
     })

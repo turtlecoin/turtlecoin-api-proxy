@@ -13,10 +13,19 @@ const TurtleCoind = require('turtlecoin-rpc').TurtleCoind
 const BlockChainCache = require('turtlecoin-blockexplorer-cache')
 const targetBlockTime = 30
 const backupSeeds = [
-  { host: 'nyc.turtlenode.io', port: 11898 },
-  { host: 'sfo.turtlenode.io', port: 11898 },
-  { host: 'ams.turtlenode.io', port: 11898 },
-  { host: 'sin.turtlenode.io', port: 11898 },
+  { host: 'node-1.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-2.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-3.nyc.turtlenode.io', port: 11898 },
+  { host: 'node-1.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-2.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-3.sfo.turtlenode.io', port: 11898 },
+  { host: 'node-1.ams.turtlenode.io', port: 11898 },
+  { host: 'node-2.ams.turtlenode.io', port: 11898 },
+  { host: 'node-3.ams.turtlenode.io', port: 11898 },
+  { host: 'node-1.sin.turtlenode.io', port: 11898 },
+  { host: 'node-2.sin.turtlenode.io', port: 11898 },
+  { host: 'node-3.sin.turtlenode.io', port: 11898 },
+  { host: 'seed.turtlenode.io', port: 11898 },
   { host: 'daemon.turtle.link', port: 11898 }
 ]
 const poolList = 'https://raw.githubusercontent.com/turtlecoin/turtlecoin-pools-json/master/turtlecoin-pools.json'

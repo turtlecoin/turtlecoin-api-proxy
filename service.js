@@ -17,4 +17,8 @@ server.on('ready', (ip, port) => {
   log(util.format('Server is listening on %s:%s ...', ip, port))
 })
 
+server.on('info', (info) => {
+  log(info)
+})
+
 server.start()

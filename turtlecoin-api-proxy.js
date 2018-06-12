@@ -9,6 +9,8 @@ const util = require('util')
 const Request = require('request-promise')
 const bodyparser = require('body-parser')
 const NodeCache = require('node-cache')
+const TurtleCoind = require('turtlecoin-rpc').TurtleCoind
+const BlockChainCache = require('turtlecoin-blockexplorer-cache')
 const targetBlockTime = 30
 const backupSeeds = [
   { host: 'node-1.nyc.turtlenode.io', port: 11898 },
@@ -35,9 +37,23 @@ function Self (opts) {
   this.timeout = opts.timeout || 5000
   this.bindIp = opts.bindIp || '0.0.0.0'
   this.bindPort = opts.bindPort || 80
+  this.defaultHost = opts.defaultHost || 'public.turtlenode.io'
+  this.defaultPort = opts.defaultPort || 11898
   this.seeds = opts.seeds || backupSeeds
   this.pools = opts.pools || []
+
+  // Blockchain cache database options
+  this.dbCacheQueryTimeout = opts.dbCacheQueryTimeout || 20000
+  this.updateInterval = opts.updateInterval || 5
+  this.maxDeviance = opts.maxDeviance || 5
+  this.dbEngine = opts.dbEngine || 'sqlite'
+  this.dbFolder = opts.dbFolder || 'db'
+  this.dbFile = opts.dbFile || 'turtlecoin'
+  this.blockBatchSize = opts.blockBatchSize || 1000
+
   this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
+  this._setupBlockChainCache()
+
   this.app = express()
   this.app.use(bodyparser.json())
   this.app.use((req, res, next) => {
@@ -156,6 +172,35 @@ function Self (opts) {
     })
   })
 
+  this.app.get('/:node/getpeers', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._getPeers(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
+  this.app.get('/:node/:port/getpeers', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._getPeers(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
+  this.app.get('/getpeers', (request, response) => {
+    this._getPeers().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(400).send()
+    })
+  })
+
   this.app.get('/:node/gettransactions', (request, response) => {
     if (!request.params.node) return response.status(400).send()
     this._getTransactions(request.params.node).then((data) => {
@@ -186,37 +231,26 @@ function Self (opts) {
   })
 
   this.app.get('/:node/json_rpc', (request, response) => {
-    if (!request.params.node) return response.status(400).send()
-    this._getJsonRpc(request.params.node).then((data) => {
-      return response.json(data)
-    }).catch((err) => {
-      this.emit('error', err)
-      return response.status(400).send()
-    })
+    // this is not even supported
+    return response.status(400).send()
   })
 
   this.app.get('/:node/:port/json_rpc', (request, response) => {
-    if (!request.params.node || !request.params.port) return response.status(400).send()
-    this._getJsonRpc(request.params.node, request.params.port).then((data) => {
-      return response.json(data)
-    }).catch((err) => {
-      this.emit('error', err)
-      return response.status(400).send()
-    })
+    // this is not even supported
+    return response.status(400).send()
   })
 
   this.app.get('/json_rpc', (request, response) => {
-    this._getJsonRpc().then((data) => {
-      return response.json(data)
-    }).catch((err) => {
-      this.emit('error', err)
-      return response.status(400).send()
-    })
+    // this is not even supported
+    return response.status(400).send()
   })
 
   this.app.post('/:node/json_rpc', (request, response) => {
-    this._postJsonRpc(request.body, request.params.node).then((data) => {
-      return response.json(data)
+    this._processJsonRPC(request.body, request.params.node).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
     }).catch((err) => {
       this.emit('error', err)
       return response.status(400).send()
@@ -225,8 +259,11 @@ function Self (opts) {
 
   this.app.post('/:node/:port/json_rpc', (request, response) => {
     if (!request.params.node || !request.params.port) return response.status(400).send()
-    this._postJsonRpc(request.body, request.params.node, request.params.port).then((data) => {
-      return response.json(data)
+    this._processJsonRPC(request.body, request.params.node, request.params.port).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
     }).catch((err) => {
       this.emit('error', err)
       return response.status(400).send()
@@ -234,8 +271,11 @@ function Self (opts) {
   })
 
   this.app.post('/json_rpc', (request, response) => {
-    this._postJsonRpc(request.body).then((data) => {
-      return response.json(data)
+    this._processJsonRPC(request.body).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
     }).catch((err) => {
       this.emit('error', err)
       return response.status(400).send()
@@ -280,6 +320,7 @@ Self.prototype.start = function () {
 
 Self.prototype.stop = function () {
   this.app.stop()
+  this.blockCache.stop()
   this.emit('stop')
 }
 
@@ -296,60 +337,431 @@ Self.prototype._get = function (node, port, method) {
   return ret
 }
 
+/*
+  Standard JSON HTTP API Commands
+*/
+
 Self.prototype._getInfo = function (node, port) {
-  node = node || 'public.turtlenode.io'
-  port = port || 11898
+  const rpc = new TurtleCoind({
+    host: node || this.defaultHost,
+    port: port || this.defaultPort
+  })
   return new Promise((resolve, reject) => {
     var cache = this._get(node, port, 'getinfo')
     if (cache) {
       cache.cached = true
       return resolve(cache)
     }
-    Request({
-      uri: util.format('http://%s:%s/getinfo', node, port),
-      timeout: this.timeout
-    }).then((data) => {
-      data = JSON.parse(data)
+    rpc.getInfo().then((data) => {
       data.cached = false
       data.node = {
-        host: node,
-        port: port
+        host: rpc.host,
+        port: rpc.port
       }
       data.globalHashRate = Math.round(data.difficulty / targetBlockTime)
       this._set(node, port, 'getinfo', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: node, port: port}})
+      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
     })
   })
 }
 
 Self.prototype._getHeight = function (node, port) {
-  node = node || 'public.turtlenode.io'
-  port = port || 11898
+  const rpc = new TurtleCoind({
+    host: node || this.defaultHost,
+    port: port || this.defaultPort
+  })
   return new Promise((resolve, reject) => {
     var cache = this._get(node, port, 'getheight')
     if (cache) {
       cache.cached = true
       return resolve(cache)
     }
-    Request({
-      uri: util.format('http://%s:%s/getheight', node, port),
-      timeout: this.timeout
-    }).then((data) => {
-      data = JSON.parse(data)
+    rpc.getHeight().then((data) => {
       data.cached = false
       data.node = {
-        host: node,
-        port: port
+        host: rpc.host,
+        port: rpc.port
       }
       this._set(node, port, 'getheight', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: node, port: port}})
+      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
     })
   })
 }
+
+Self.prototype._getTransactions = function (node, port) {
+  const rpc = new TurtleCoind({
+    host: node || this.defaultHost,
+    port: port || this.defaultPort
+  })
+  return new Promise((resolve, reject) => {
+    var cache = this._get(node, port, 'gettransactions')
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    rpc.getTransactions().then((data) => {
+      data.cached = false
+      data.node = {
+        host: rpc.host,
+        port: rpc.port
+      }
+      this._set(node, port, 'gettransactions', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+    })
+  })
+}
+
+Self.prototype._getPeers = function (node, port) {
+  const rpc = new TurtleCoind({
+    host: node || this.defaultHost,
+    port: port || this.defaultPort
+  })
+  return new Promise((resolve, reject) => {
+    var cache = this._get(node, port, 'getpeers')
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    rpc.getPeers().then((data) => {
+      data.cached = false
+      data.node = {
+        host: rpc.host,
+        port: rpc.port
+      }
+      this._set(node, port, 'getpeers', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+    })
+  })
+}
+
+/*
+  Begin JSON RPC API Commands
+*/
+
+Self.prototype._processJsonRPC = function (content, node, port) {
+  node = node || this.defaultHost
+  port = port || this.defaultPort
+
+  const reject = function (reason) {
+    return new Promise((resolve, reject) => {
+      return reject(new Error(reason))
+    })
+  }
+
+  if (!content.method) return reject('No method defined')
+
+  try {
+    switch (content.method) {
+      case 'f_blocks_list_json':
+        return this.getBlocks({
+          host: node,
+          port: port,
+          height: content.params.height
+        })
+      case 'f_block_json':
+        return this.getBlock({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'f_transaction_json':
+        return this.getTransaction({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'getblockcount':
+        return this.getBlockCount({
+          host: node,
+          port: port
+        })
+      case 'on_getblockhash':
+        return this.getBlockHash({
+          host: node,
+          port: port,
+          height: content.params[0]
+        })
+      case 'getlastblockheader':
+        return this.getLastBlockHeader({
+          host: node,
+          port: port
+        })
+      case 'getblockheaderbyhash':
+        return this.getBlockHeaderByHash({
+          host: node,
+          port: port,
+          hash: content.params.hash
+        })
+      case 'getblockheaderbyheight':
+        return this.getBlockHeaderByHeight({
+          host: node,
+          port: port,
+          height: content.params.height
+        })
+      case 'f_on_transactions_pool_json':
+        return this.getTransactionPool({
+          host: node,
+          port: port
+        })
+      case 'getblocktemplate':
+        return this.getBlockTemplate({
+          host: node,
+          port: port,
+          reserveSize: content.params.reserve_size,
+          walletAddress: content.params.wallet_address
+        })
+      case 'submitblock':
+        return this.submitBlock({
+          host: node,
+          port: port,
+          blockBlob: content.params[0]
+        })
+      case 'getcurrencyid':
+        return this.getCurrencyId({
+          host: node,
+          port: port
+        })
+      default:
+        return this._jsonRpc({
+          host: node,
+          port: port,
+          method: content.method,
+          params: content.params
+        })
+    }
+  } catch (e) {
+    return reject(e)
+  }
+}
+
+/*
+  Block Explorer Functions That Check the Local Database CACHE
+  before going back to the node to check for the relevant responses
+*/
+
+Self.prototype.getBlocks = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlocks({
+      height: opts.height
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlocks({
+        height: opts.height
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getBlock = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlock({
+      hash: opts.hash
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlock({
+        hash: opts.hash
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getTransaction = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getTransaction({
+      hash: opts.hash
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getTransaction({
+        hash: opts.hash
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getTransactionPool = function (opts) {
+  const rpc = new TurtleCoind({
+    host: opts.host,
+    port: opts.port
+  })
+  return rpc.getTransactionPool()
+}
+
+Self.prototype.getBlockCount = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlockCount().then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlockCount().then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getBlockHash = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlockHash({
+      height: opts.height
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlockHash({
+        height: opts.height
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getLastBlockHeader = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getLastBlockHeader().then((data) => {
+      return resolve(data)
+    }).catch((err) => {
+      console.log(err)
+      rpc.getLastBlockHeader().then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getBlockHeaderByHash = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlockHeaderByHash({
+      hash: opts.hash
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlockHeaderByHash({
+        hash: opts.hash
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getBlockHeaderByHeight = function (opts) {
+  return new Promise((resolve, reject) => {
+    const rpc = new TurtleCoind({
+      host: opts.host,
+      port: opts.port
+    })
+    this.blockCache.getBlockHeaderByHeight({
+      height: opts.height
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      rpc.getBlockHeaderByHeight({
+        height: opts.height
+      }).then((data) => {
+        return resolve(data)
+      }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getCurrencyId = function (opts) {
+  const rpc = new TurtleCoind({
+    host: opts.host,
+    port: opts.port
+  })
+  return new Promise((resolve, reject) => {
+    rpc.getCurrencyId().then((currency) => {
+      return resolve({
+        currency_id_blob: currency
+      })
+    }).catch((err) => {
+      return reject(err)
+    })
+  })
+}
+
+Self.prototype.getBlockTemplate = function (opts) {
+  const rpc = new TurtleCoind({
+    host: opts.host,
+    port: opts.port
+  })
+  return rpc.getBlockTemplate({
+    reserveSize: opts.reserveSize,
+    walletAddress: opts.walletAddress
+  })
+}
+
+Self.prototype.submitBlock = function (opts) {
+  const rpc = new TurtleCoind({
+    host: opts.host,
+    port: opts.port
+  })
+  return rpc.submitBlock({
+    blockBlob: opts.blockBlob
+  })
+}
+
+Self.prototype._jsonRpc = function (opts) {
+  const rpc = new TurtleCoind({
+    host: opts.host,
+    port: opts.port
+  })
+  return new Promise((resolve, reject) => {
+    rpc._post(opts.method, opts.params).then((data) => {
+      return resolve(data)
+    }).catch((err) => {
+      return reject(err)
+    })
+  })
+}
+
+/*
+  Begin custom JSON HTTP API Commands
+*/
 
 Self.prototype._getGlobalHeight = function () {
   return new Promise((resolve, reject) => {
@@ -533,90 +945,6 @@ Self.prototype._getPoolNetworkInfo = function (url) {
   })
 }
 
-Self.prototype._getTransactions = function (node, port) {
-  node = node || 'public.turtlenode.io'
-  port = port || 11898
-  return new Promise((resolve, reject) => {
-    var cache = this._get(node, port, 'gettransactions')
-    if (cache) {
-      cache.cached = true
-      return resolve(cache)
-    }
-    Request({
-      uri: util.format('http://%s:%s/gettransactions', node, port),
-      timeout: this.timeout
-    }).then((data) => {
-      data = JSON.parse(data)
-      data.cached = false
-      data.node = {
-        host: node,
-        port: port
-      }
-      this._set(node, port, 'gettransactions', data)
-      return resolve(data)
-    }).catch((err) => {
-      return resolve({error: err, node: {host: node, port: port}})
-    })
-  })
-}
-
-Self.prototype._getJsonRpc = function (node, port) {
-  node = node || 'public.turtlenode.io'
-  port = port || 11898
-  return new Promise((resolve, reject) => {
-    var cache = this._get(node, port, 'getjsonrpc')
-    if (cache) {
-      cache.cached = true
-      return resolve(cache)
-    }
-    Request({
-      uri: util.format('http://%s:%s/json_rpc', node, port),
-      timeout: this.timeout
-    }).then((data) => {
-      data = JSON.parse(data)
-      data.cached = false
-      data.node = {
-        host: node,
-        port: port
-      }
-      this._set(node, port, 'getjsonrpc', data)
-      return resolve(data)
-    }).catch((err) => {
-      return resolve({error: err, node: {host: node, port: port}})
-    })
-  })
-}
-
-Self.prototype._postJsonRpc = function (content, node, port) {
-  node = node || 'public.turtlenode.io'
-  port = port || 11898
-  return new Promise((resolve, reject) => {
-    var method = JSON.stringify(content)
-    var cache = this._get(node, port, method)
-    if (cache) {
-      cache.cached = true
-      return resolve(cache)
-    }
-    var req = {
-      method: 'POST',
-      uri: util.format('http://%s:%s/json_rpc', node, port),
-      json: true,
-      body: content
-    }
-    Request(req).then((data) => {
-      data.cached = false
-      data.node = {
-        host: node,
-        port: port
-      }
-      this._set(node, port, method, data)
-      return resolve(data)
-    }).catch((err) => {
-      return resolve({error: err, node: {host: node, port: port}})
-    })
-  })
-}
-
 Self.prototype._getPoolList = function () {
   return new Promise((resolve, reject) => {
     var pools = []
@@ -637,6 +965,34 @@ Self.prototype._getPoolList = function () {
     })
   })
 }
+
+// Sets up the blockchain cache database stuff
+
+Self.prototype._setupBlockChainCache = function () {
+  this.blockCacheReady = false
+  this.blockCache = new BlockChainCache({
+    rpcHost: this.defaultHost,
+    rpcPort: this.defaultPort,
+    updateInterval: this.updateInterval,
+    dbEngine: this.dbEngine,
+    dbFolder: this.dbFolder,
+    dbFile: this.dbFile,
+    timeout: this.dbCacheQueryTimeout
+  })
+  this.blockCache.on('error', (err) => {
+    this.emit('error', util.format('[CACHE] %s', err))
+  })
+  this.blockCache.on('info', (info) => {
+    this.emit('info', util.format('[CACHE] %s', info))
+  })
+  this.blockCache.on('ready', () => {
+    this.blockCacheReady = true
+  })
+}
+
+/*
+  Helper functions
+*/
 
 function maxValue (arr) {
   return arr.reduce((a, b) => {

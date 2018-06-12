@@ -17,7 +17,7 @@
     "request": "^2.85.0",
     "request-promise": "^4.2.2",
     "sqlite3": "^4.0.0",
-    "turtlecoin-blockexplorer-cache": "^0.6.6",
+    "turtlecoin-blockexplorer-cache": "^0.6.8",
     "turtlecoin-rpc": "^0.5.3"
   },
   "devDependencies": {

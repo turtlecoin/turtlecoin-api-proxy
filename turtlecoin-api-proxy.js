@@ -612,7 +612,22 @@ Self.prototype.getTransactionPool = function (opts) {
     host: opts.host,
     port: opts.port
   })
-  return rpc.getTransactionPool()
+  return new Promise((resolve, reject) => {
+    var cache = this._get(rpc.host, rpc.port, 'f_on_transactions_pool_json')
+    if (cache) {
+      return resolve(cache)
+    }
+    rpc.getTransactionPool().then((pool) => {
+      var data = {
+        status: 'OK',
+        transactions: pool
+      }
+      this._set(rpc.host, rpc.port, 'f_on_transactions_pool_json', data)
+      return resolve(data)
+    }).catch((err) => {
+      return reject(err)
+    })
+  })
 }
 
 Self.prototype.getBlockCount = function (opts) {
@@ -621,11 +636,22 @@ Self.prototype.getBlockCount = function (opts) {
       host: opts.host,
       port: opts.port
     })
-    this.blockCache.getBlockCount().then((data) => {
-      return resolve(data)
+
+    var networkHeight
+    this.getHeight().then((data) => {
+      networkHeight = data.network_height
+      return this.blockCache.getBlockCount()
+    }).then((block) => {
+      if (Math.abs(networkHeight - block.count) > this.maxDeviance) {
+        throw new Error('err')
+      }
+      return resolve(block)
     }).catch(() => {
       rpc.getBlockCount().then((data) => {
-        return resolve(data)
+        return resolve({
+          count: data,
+          status: 'OK'
+        })
       }).catch(() => { return reject(new Error('Failure encountered')) })
     })
   })
@@ -714,10 +740,16 @@ Self.prototype.getCurrencyId = function (opts) {
     port: opts.port
   })
   return new Promise((resolve, reject) => {
+    var cache = this._get(rpc.host, rpc.port, 'getcurrencyid')
+    if (cache) {
+      return resolve(cache)
+    }
     rpc.getCurrencyId().then((currency) => {
-      return resolve({
+      var data = {
         currency_id_blob: currency
-      })
+      }
+      this._set(rpc.host, rpc.port, 'getcurrencyid', data)
+      return resolve(data)
     }).catch((err) => {
       return reject(err)
     })

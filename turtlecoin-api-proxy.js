@@ -43,13 +43,13 @@ function Self (opts) {
   this.pools = opts.pools || []
 
   // Blockchain cache database options
+  this.autoStartUpdater = (opts.autoStartUpdater !== undefined) ? opts.autoStartUpdater : false
   this.dbCacheQueryTimeout = opts.dbCacheQueryTimeout || 20000
   this.updateInterval = opts.updateInterval || 5
   this.maxDeviance = opts.maxDeviance || 5
   this.dbEngine = opts.dbEngine || 'sqlite'
   this.dbFolder = opts.dbFolder || 'db'
   this.dbFile = opts.dbFile || 'turtlecoin'
-  this.blockBatchSize = opts.blockBatchSize || 1000
 
   this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
   this._setupBlockChainCache()
@@ -1009,7 +1009,8 @@ Self.prototype._setupBlockChainCache = function () {
     dbEngine: this.dbEngine,
     dbFolder: this.dbFolder,
     dbFile: this.dbFile,
-    timeout: this.dbCacheQueryTimeout
+    timeout: this.dbCacheQueryTimeout,
+    autoStartUpdater: this.autoStartUpdater
   })
   this.blockCache.on('error', (err) => {
     this.emit('error', util.format('[CACHE] %s', err))

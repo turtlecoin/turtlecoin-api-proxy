@@ -29,6 +29,7 @@ npm install -g pm2
 pm2 startup
 pm2 install pm2-logrotate
 pm2 start service.js --watch --name turtlecoin-api-proxy -i max
+pm2 start cacheUpdater.js --name turtlecoin-api-proxy-cache
 pm2 save
 ```
 
@@ -48,6 +49,9 @@ var service = new TRTLProxy({
   defaultPort: 11898, // The default port to use on the default node
   seeds: [], // Nodes that we want to pre-cache information from
   pools: [], // The pools we want to return data for, if none are supplied look to the official TurtleCoin list on the repos
+  
+  // Blockchain database cache options
+  autoStartUpdater: false, // Whether we auto start the blockchain database cache
   dbCacheQueryTimeout: 20000, // How long should the database cache updated wait for a RPC response
   updateInterval: 5, // How long, in seconds, that we pause for before checking for new blocks when we're synced up or we finish scanning a batch
   dbEngine: 'sqlite', // What database engine to use, see below for additional detais.

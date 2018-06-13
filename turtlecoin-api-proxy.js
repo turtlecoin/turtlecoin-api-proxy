@@ -25,6 +25,7 @@ const backupSeeds = [
   { host: 'node-1.sin.turtlenode.io', port: 11898 },
   { host: 'node-2.sin.turtlenode.io', port: 11898 },
   { host: 'node-3.sin.turtlenode.io', port: 11898 },
+  { host: 'public.turtlenode.io', port: 11898 },
   { host: 'seed.turtlenode.io', port: 11898 },
   { host: 'daemon.turtle.link', port: 11898 }
 ]

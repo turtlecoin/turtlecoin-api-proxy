@@ -685,8 +685,7 @@ Self.prototype.getLastBlockHeader = function (opts) {
     })
     this.blockCache.getLastBlockHeader().then((data) => {
       return resolve(data)
-    }).catch((err) => {
-      console.log(err)
+    }).catch(() => {
       rpc.getLastBlockHeader().then((data) => {
         return resolve(data)
       }).catch(() => { return reject(new Error('Failure encountered')) })

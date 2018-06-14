@@ -66,7 +66,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -75,7 +75,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -84,7 +84,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -93,7 +93,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -111,7 +111,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -121,7 +121,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -130,7 +130,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -140,7 +140,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -150,7 +150,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -159,7 +159,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -169,7 +169,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -179,7 +179,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -188,7 +188,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -198,7 +198,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -208,7 +208,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -217,7 +217,7 @@ function Self (opts) {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -244,7 +244,7 @@ function Self (opts) {
       })
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -257,7 +257,7 @@ function Self (opts) {
       })
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
 
@@ -269,9 +269,175 @@ function Self (opts) {
       })
     }).catch((err) => {
       this.emit('error', err)
-      return response.status(400).send()
+      return response.status(500).send()
     })
   })
+
+  /*
+    REST API For Block Explorer
+  */
+
+  this.app.get('/blocks/count', (request, response) => {
+    this.getBlockCount({
+      host: this.defaultHost,
+      port: this.defaultPort
+    }).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/blocks/:height', (request, response) => {
+    if (!request.params.height) return response.status(400).send()
+    this.getBlocks({
+      host: this.defaultHost,
+      port: this.defaultPort,
+      height: request.params.height}).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/block/header/top', (request, response) => {
+    this.getLastBlockHeader({
+      host: this.defaultHost,
+      port: this.defaultPort
+    }).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/block/header/:idx', (request, response) => {
+    if (!request.params.idx) return response.status(400).send()
+    var idx = parseInteger(request.params.idx)
+    if (!idx) { // this is a hash, not a height
+      this.getBlockHeaderByHash({
+        host: this.defaultHost,
+        port: this.defaultPort,
+        hash: request.params.idx
+      }).then((data) => {
+        return response.json({
+          jsonrpc: '2.0',
+          result: data
+        })
+      }).catch((err) => {
+        this.emit('error', err)
+        return response.status(500).send()
+      })
+    } else {
+      this.getBlockHeaderByHeight({
+        host: this.defaultHost,
+        port: this.defaultPort,
+        height: idx
+      }).then((data) => {
+        return response.json({
+          jsonrpc: '2.0',
+          result: data
+        })
+      }).catch((err) => {
+        this.emit('error', err)
+        return response.status(500).send()
+      })
+    }
+  })
+
+  this.app.get('/block/:idx', (request, response) => {
+    if (!request.params.idx) return response.status(400).send()
+    var idx = parseInteger(request.params.idx)
+    if (!idx) { // this is a hash, not a height
+      this.getBlock({
+        host: this.defaultHost,
+        port: this.defaultPort,
+        hash: request.params.idx
+      }).then((data) => {
+        return response.json({
+          jsonrpc: '2.0',
+          result: data
+        })
+      }).catch((err) => {
+        this.emit('error', err)
+        return response.status(500).send()
+      })
+    } else {
+      this.getBlockHash({
+        host: this.defaultHost,
+        port: this.defaultPort,
+        height: idx
+      }).then((data) => {
+        return response.json({
+          jsonrpc: '2.0',
+          result: data
+        })
+      }).catch((err) => {
+        this.emit('error', err)
+        return response.status(500).send()
+      })
+    }
+  })
+
+  this.app.get('/transaction/pool', (request, response) => {
+    this.getTransactionPool({
+      host: this.defaultHost,
+      port: this.defaultPort
+    }).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/transaction/:hash', (request, response) => {
+    if (!request.params.hash) return response.status(400).send()
+    this.getTransaction({
+      host: this.defaultHost,
+      port: this.defaultPort,
+      hash: request.params.hash}).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/currency', (request, response) => {
+    this.getCurrencyId({
+      host: this.defaultHost,
+      port: this.defaultPort
+    }).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  // Standard library timer setup
 
   var that = this
   function getPools () {
@@ -629,7 +795,7 @@ Self.prototype.getBlockCount = function (opts) {
     })
 
     var networkHeight
-    this.getHeight().then((data) => {
+    this._getHeight().then((data) => {
       networkHeight = data.network_height
       return this.blockCache.getBlockCount()
     }).then((block) => {
@@ -1016,6 +1182,12 @@ Self.prototype._setupBlockChainCache = function () {
 /*
   Helper functions
 */
+
+function parseInteger (str) {
+  var a = parseInt(str)
+  if (a.toString().length === str.length) return a
+  return undefined
+}
 
 function maxValue (arr) {
   return arr.reduce((a, b) => {

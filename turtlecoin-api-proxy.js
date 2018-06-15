@@ -432,6 +432,22 @@ function Self (opts) {
     })
   })
 
+  this.app.get('/transactions/:paymentid', (request, response) => {
+    if (!request.params.paymentid) return response.status(500).send()
+    this.getTransactionHashesByPaymentId({
+      host: this.defaultHost,
+      port: this.defaultPort,
+      paymentId: request.params.paymentid}).then((data) => {
+      return response.json({
+        jsonrpc: '2.0',
+        result: data
+      }).catch((err) => {
+        this.emit('error', err)
+        return response.status(500).send()
+      })
+    })
+  })
+
   this.app.get('/currency', (request, response) => {
     this.getCurrencyId({
       host: this.defaultHost,
@@ -696,6 +712,12 @@ Self.prototype._processJsonRPC = function (content, node, port) {
           host: node,
           port: port
         })
+      case 'f_gettransactionsbypaymentid':
+        return this.getTransactionHashesByPaymentId({
+          host: node,
+          port: port,
+          paymentId: content.params.paymentId
+        })
       default:
         return this._jsonRpc({
           host: node,
@@ -770,6 +792,19 @@ Self.prototype.getTransaction = function (opts) {
       }).then((data) => {
         return resolve(data)
       }).catch(() => { return reject(new Error('Failure encountered')) })
+    })
+  })
+}
+
+Self.prototype.getTransactionHashesByPaymentId = function (opts) {
+  return new Promise((resolve, reject) => {
+    // This call is not currently supported by the daemon, it is only supported by the BlockChainCache
+    this.blockCache.getTransactionHashesByPaymentId({
+      paymentId: opts.paymentId
+    }).then((data) => {
+      return resolve(data)
+    }).catch(() => {
+      return reject(new Error('Failure encountered'))
     })
   })
 }

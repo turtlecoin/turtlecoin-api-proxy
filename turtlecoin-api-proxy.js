@@ -438,14 +438,15 @@ function Self (opts) {
     this.getTransactionHashesByPaymentId({
       host: this.defaultHost,
       port: this.defaultPort,
-      paymentId: request.params.paymentid}).then((data) => {
+      paymentId: request.params.paymentid
+    }).then((data) => {
       return response.json({
         jsonrpc: '2.0',
         result: data
-      }).catch((err) => {
-        this.emit('error', err)
-        return response.status(500).send()
       })
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
     })
   })
 

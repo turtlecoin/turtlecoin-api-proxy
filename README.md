@@ -120,8 +120,8 @@ Refer to the [TurtleCoin](https://turtlecoin.lol) documentation for the API comm
 To query a node other than the one supplied in ```defaultHost``` call any of the API commands in one of the following formats:
 
 * /endpoint
-* /<node>/endpoint
-* /<node>/<port>/endpoint
+* /:node:/endpoint
+* /:node:/:port:/endpoint
 
 Examples:
 

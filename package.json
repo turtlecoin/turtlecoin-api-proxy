@@ -1,6 +1,6 @@
 {
   "name": "turtlecoin-api-proxy",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Provides an easy to use proxy interface for interacting with multiple TurtleCoin Nodes",
   "main": "turtlecoin-api-proxy.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/brandonlehmann/turlecoin-api-proxy.git"
   },
   "author": "Brandon Lehmann <brandonlehmann@gmail.com>",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0-only",
   "bugs": {
     "url": "https://github.com/brandonlehmann/turlecoin-api-proxy/issues"
   },

@@ -57,6 +57,13 @@ var service = new TRTLProxy({
   dbEngine: 'sqlite', // What database engine to use, see below for additional detais.
   dbFolder: 'db', // What folder to use to store the database file, only valid for some database engines
   dbFile: 'turtlecoin', // The filename to use to store the database file, only valid for some database engines
+  dbHost: '127.0.0.1', // The IP address of the external DB server to connect to, only valid for some database engines
+  dbPort: 3306, // The port of the external DB server to connect to, only valid for some database engines
+  dbUser: '', // The username to the external DB server to, only valid for some database engines
+  dbPassword: '', // The password to the external DB server, only valid for some database engines
+  dbDatabase: '', // The database name used on the external DB server, only valid for some database engines
+  dbSocketPath: false, // The path to the nix socket for the external DB server, only valid for some database engines
+  dbConnectionLimit: 10, // The maximum number of connections to open to the external DB server, only valid for some database engines
 })
 ```
 

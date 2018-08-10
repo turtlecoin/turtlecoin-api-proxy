@@ -1,5 +1,5 @@
 // Copyright (c) 2018, Brandon Lehmann, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 'use strict'
@@ -133,6 +133,35 @@ function Self (opts) {
 
   this.app.get('/getinfo', (request, response) => {
     this._getInfo().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/feeinfo', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._feeInfo(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/:port/feeinfo', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._feeInfo(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/feeinfo', (request, response) => {
+    this._feeInfo().then((data) => {
       return response.json(data)
     }).catch((err) => {
       this.emit('error', err)
@@ -540,6 +569,31 @@ Self.prototype._getInfo = function (node, port) {
       }
       data.globalHashRate = Math.round(data.difficulty / targetBlockTime)
       this._set(node, port, 'getinfo', data)
+      return resolve(data)
+    }).catch((err) => {
+      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+    })
+  })
+}
+
+Self.prototype._feeInfo = function (node, port) {
+  const rpc = new TurtleCoind({
+    host: node || this.defaultHost,
+    port: port || this.defaultPort
+  })
+  return new Promise((resolve, reject) => {
+    var cache = this._get(node, port, 'feeinfo')
+    if (cache) {
+      cache.cached = true
+      return resolve(cache)
+    }
+    rpc.feeInfo().then((data) => {
+      data.cached = false
+      data.node = {
+        host: rpc.host,
+        port: rpc.port
+      }
+      this._set(node, port, 'feeinfo', data)
       return resolve(data)
     }).catch((err) => {
       return resolve({error: err, node: {host: rpc.host, port: rpc.port}})

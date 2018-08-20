@@ -46,6 +46,10 @@ function Self (opts) {
   this.dbEngine = opts.dbEngine || 'sqlite'
   this.dbFolder = opts.dbFolder || 'db'
   this.dbFile = opts.dbFile || 'turtlecoin'
+  this.dbHost = opts.dbHost || '127.0.0.1'
+  this.dbUser = opts.dbUser || 'turtlecoin'
+  this.dbPassword = opts.dbPassword || 'turtlecoin'
+  this.dbDatabase = opts.dbDatabase || 'turtlecoin'
 
   this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
   this._setupBlockChainCache()
@@ -1261,6 +1265,10 @@ Self.prototype._setupBlockChainCache = function () {
     dbEngine: this.dbEngine,
     dbFolder: this.dbFolder,
     dbFile: this.dbFile,
+    dbHost: this.dbHost,
+    dbUser: this.dbUser,
+    dbPassword: this.dbPassword,
+    dbDatabase: this.dbDatabase,
     timeout: this.dbCacheQueryTimeout,
     autoStartUpdater: this.autoStartUpdater
   })

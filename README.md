@@ -1,5 +1,8 @@
-# TurtleCoind Node API Proxy
+[![NPM](https://nodei.co/npm/turtlecoin-api-proxy.png?downloads=true&stars=true)](https://nodei.co/npm/turtlecoin-api-proxy/)
 
+[![Build Status](https://travis-ci.org/brandonlehmann/turtlecoin-api-proxy.png?branch=master)](https://travis-ci.org/brandonlehmann/turtlecoin-api-proxy) [![Build Status](https://ci.appveyor.com/api/projects/status/github/brandonlehmann/turtlecoin-api-proxy?branch=master&svg=true)](https://ci.appveyor.com/project/brandonlehmann/turtlecoin-api-proxy/branch/master)
+
+# TurtleCoind Node API Proxy
 
 This project is designed to provide an API proxy for web services to contact any number of TurtleCoin nodes for basic information regarding the state of the Node. It utilizes a cache that helps speed up the delivery of responses to clients while minimizing the load against the daemon by remote callers.
 

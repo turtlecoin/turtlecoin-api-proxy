@@ -115,6 +115,122 @@ function Self (opts) {
     return response.json(this.seeds)
   })
 
+  this.app.get('/:node/info', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._getInfo(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/:port/info', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._getInfo(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/info', (request, response) => {
+    this._getInfo().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/fee', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._feeInfo(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/:port/fee', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._feeInfo(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/fee', (request, response) => {
+    this._feeInfo().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/height', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._getHeight(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/:port/height', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._getHeight(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/height', (request, response) => {
+    this._getHeight().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/peers', (request, response) => {
+    if (!request.params.node) return response.status(400).send()
+    this._getPeers(request.params.node).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/:node/:port/peers', (request, response) => {
+    if (!request.params.node || !request.params.port) return response.status(400).send()
+    this._getPeers(request.params.node, request.params.port).then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
+  this.app.get('/peers', (request, response) => {
+    this._getPeers().then((data) => {
+      return response.json(data)
+    }).catch((err) => {
+      this.emit('error', err)
+      return response.status(500).send()
+    })
+  })
+
   this.app.get('/:node/getinfo', (request, response) => {
     if (!request.params.node) return response.status(400).send()
     this._getInfo(request.params.node).then((data) => {

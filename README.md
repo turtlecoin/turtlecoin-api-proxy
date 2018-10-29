@@ -10,7 +10,7 @@ The sample **service.js** includes an example of how to quickly spin up the web 
 
 ## Dependencies
 
-* NodeJS v8.x
+* [NodeJS](https://nodejs.org) v8.x
 
 ## Easy Start
 
@@ -19,7 +19,7 @@ This will spin up a copy of the webservice on 0.0.0.0:80. See the additional opt
 ```bash
 git clone https://github.com/brandonlehmann/turtlecoin-api-proxy.git
 cd turtlecoin-api-proxy
-npm i
+npm install
 node service.js
 ```
 
@@ -28,7 +28,7 @@ node service.js
 I'm a big fan of PM2 so if you don't have it installed, the setup is quite simple.
 
 ```bash
-npm install -g pm2
+npm install -g pm2@latest
 pm2 startup
 pm2 install pm2-logrotate
 pm2 start service.js --watch --name turtlecoin-api-proxy -i max
@@ -263,8 +263,6 @@ You will receive a JSON response of difficulty information as gathered from the 
 
 ## License
 
-```
 Copyright (C) 2018 Brandon Lehmann, The TurtleCoin Developers
 
 Please see the included LICENSE file for more information.
-```

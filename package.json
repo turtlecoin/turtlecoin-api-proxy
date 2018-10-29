@@ -1,6 +1,6 @@
 {
   "name": "turtlecoin-api-proxy",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "description": "Provides an easy to use proxy interface for interacting with multiple TurtleCoin Nodes",
   "main": "index.js",
   "scripts": {
@@ -19,14 +19,14 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "compression": "^1.7.3",
-    "express": "^4.16.3",
-    "helmet": "^3.13.0",
+    "express": "^4.16.4",
+    "helmet": "^3.14.0",
     "node-cache": "^4.1.1",
-    "request": "^2.85.0",
+    "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "sqlite3": "^4.0.2",
-    "turtlecoin-blockexplorer-cache": "^0.8.3",
-    "turtlecoin-rpc": "^0.8.3"
+    "sqlite3": "^4.0.3",
+    "turtlecoin-blockexplorer-cache": "^0.8.4",
+    "turtlecoin-rpc": "^0.8.4"
   },
   "devDependencies": {
     "standard": "^11.0.1"

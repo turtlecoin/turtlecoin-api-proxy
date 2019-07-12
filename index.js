@@ -51,7 +51,7 @@ function Self (opts) {
   this.dbPassword = opts.dbPassword || 'turtlecoin'
   this.dbDatabase = opts.dbDatabase || 'turtlecoin'
 
-  this.cache = new NodeCache({stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2))})
+  this.cache = new NodeCache({ stdTTL: this.cacheTimeout, checkPeriod: (Math.round(this.cacheTimeout / 2)) })
   this._setupBlockChainCache()
 
   this.app = express()
@@ -452,7 +452,7 @@ function Self (opts) {
     this.getBlocks({
       host: this.defaultHost,
       port: this.defaultPort,
-      height: request.params.height}).then((data) => {
+      height: request.params.height }).then((data) => {
       return response.json({
         jsonrpc: '2.0',
         result: data
@@ -566,7 +566,7 @@ function Self (opts) {
     this.getTransaction({
       host: this.defaultHost,
       port: this.defaultPort,
-      hash: request.params.hash}).then((data) => {
+      hash: request.params.hash }).then((data) => {
       return response.json({
         jsonrpc: '2.0',
         result: data
@@ -691,7 +691,7 @@ Self.prototype._getInfo = function (node, port) {
       this._set(node, port, 'getinfo', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+      return resolve({ error: err, node: { host: rpc.host, port: rpc.port } })
     })
   })
 }
@@ -716,7 +716,7 @@ Self.prototype._feeInfo = function (node, port) {
       this._set(node, port, 'feeinfo', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+      return resolve({ error: err, node: { host: rpc.host, port: rpc.port } })
     })
   })
 }
@@ -741,7 +741,7 @@ Self.prototype._getHeight = function (node, port) {
       this._set(node, port, 'getheight', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+      return resolve({ error: err, node: { host: rpc.host, port: rpc.port } })
     })
   })
 }
@@ -766,7 +766,7 @@ Self.prototype._getTransactions = function (node, port) {
       this._set(node, port, 'gettransactions', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+      return resolve({ error: err, node: { host: rpc.host, port: rpc.port } })
     })
   })
 }
@@ -791,7 +791,7 @@ Self.prototype._getPeers = function (node, port) {
       this._set(node, port, 'getpeers', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err, node: {host: rpc.host, port: rpc.port}})
+      return resolve({ error: err, node: { host: rpc.host, port: rpc.port } })
     })
   })
 }
@@ -1202,7 +1202,7 @@ Self.prototype._getGlobalHeight = function () {
       this._set('network', 'network', 'globalheight', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err})
+      return resolve({ error: err })
     })
   })
 }
@@ -1242,7 +1242,7 @@ Self.prototype._getGlobalDifficulty = function () {
       this._set('network', 'network', 'globaldifficulty', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err})
+      return resolve({ error: err })
     })
   })
 }
@@ -1282,7 +1282,7 @@ Self.prototype._getGlobalPoolHeight = function () {
       this._set('pool', 'pool', 'globalpoolheight', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err})
+      return resolve({ error: err })
     })
   })
 }
@@ -1322,7 +1322,7 @@ Self.prototype._getGlobalPoolDifficulty = function () {
       this._set('pool', 'pool', 'globalpooldifficulty', data)
       return resolve(data)
     }).catch((err) => {
-      return resolve({error: err})
+      return resolve({ error: err })
     })
   })
 }
@@ -1340,11 +1340,11 @@ Self.prototype._getPoolNetworkInfo = function (url) {
       json: true,
       timeout: this.timeout
     }).then((data) => {
-      if (!data.network) return resolve({error: 'Invalid data returned by remote host'})
+      if (!data.network) return resolve({ error: 'Invalid data returned by remote host' })
       this._set('pool', url, 'networkInfo')
       return resolve(data.network)
     }).catch((err) => {
-      return resolve({error: err})
+      return resolve({ error: err })
     })
   })
 }
@@ -1435,11 +1435,11 @@ function medValue (arr) {
 }
 
 function voteValue (arr) {
-  if (arr.length === 0) return {value: 0, confidence: 1}
+  if (arr.length === 0) return { value: 0, confidence: 1 }
   var tallies = {}
   for (var i = 0; i < arr.length; i++) {
     var val = arr[i]
-    if (!tallies[val]) tallies[val] = {value: val, tally: 0}
+    if (!tallies[val]) tallies[val] = { value: val, tally: 0 }
     tallies[val].tally++
   }
   var votes = []
@@ -1449,7 +1449,7 @@ function voteValue (arr) {
   votes = votes.sort((a, b) => b.value - a.value)
   var winner = votes[0]
   winner.confidence = winner.tally / arr.length
-  return {value: winner.value, confidence: winner.confidence}
+  return { value: winner.value, confidence: winner.confidence }
 }
 
 module.exports = Self

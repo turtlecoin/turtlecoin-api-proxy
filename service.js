@@ -8,7 +8,7 @@ require('colors')
 const TurtleCoinAPI = require('./')
 const util = require('util')
 
-var server = new TurtleCoinAPI({
+const server = new TurtleCoinAPI({
 })
 
 function log (message) {
